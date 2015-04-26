@@ -6,6 +6,8 @@ var mongoose = require('mongoose'),
 var TranslatorSchema = new Schema({
   search: String,
   result: String,
+  main: String,
+  ru: String,
   count: Number
 });
 

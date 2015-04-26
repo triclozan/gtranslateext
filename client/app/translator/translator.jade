@@ -6,10 +6,12 @@ div(ng-include='"components/navbar/navbar.html"')
         rows='5',
         ng-change='translate()',
         ng-model='sentenceToTranslate',
-        ng-model-options='{ debounce: 1000 }'
+        ng-model-options='{ debounce: 200 }'
     )
 .col-md-6
     | {{translations ? '' : 'Nothing to show here yet...'}}
+    div
+        b {{mainTranslation}} {{ruTranslation}}
     table(ng-repeat='category in translations')
         tbody
             tr

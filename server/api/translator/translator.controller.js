@@ -55,13 +55,12 @@ exports.destroy = function(req, res) {
   });
 };
 
-// Creates a new translator in the DB.
-exports.translate = function(req, res) {
+function makeGoogleQuery(search, sl, tl, callback) {
     var params = [
-        ['q', req.query.search],
+        ['q', search],
         ['client', 't'],
-        ['sl', 'hu'],
-        ['tl', 'en'],
+        ['sl', sl],
+        ['tl', tl],
         ['hl', 'en'],
         ['ie', 'UTF-8'],
         ['oe', 'UTF-8'],
@@ -99,21 +98,33 @@ exports.translate = function(req, res) {
     }
 
     var url = 'https://translate.google.com/translate_a/single?' + stringParams;
+
     https.get(url, function(response) {
         response.on('data', function(chunk) {
             data = data + chunk;
         }).on('end', function() {
-            //console.log(data);
             eval('parsedData = ' + data);
-            var translations = parsedData[1];
-            if (parsedData[1])
-            Translator.findAndModify({search: req.query.search, result: JSON.stringify(parsedData[1])}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
-                if(err) { return handleError(res, err); }
-                return res.json(200, JSON.stringify(parsedData[1]));
-            });
+            callback(null, parsedData);
         })
     }).on('error', function(err) {
-        return handleError(res, err);
+        return callback(err);
+    });
+};
+
+// Creates a new translator in the DB.
+exports.translate = function(req, res) {
+    makeGoogleQuery(req.query.search, 'hu', 'ru', function(err, ruParsedData) {
+        makeGoogleQuery(req.query.search, 'hu', 'en', function(err, parsedData) {
+            if (err) return handleError(res, err);
+            var translations = parsedData[1];
+            if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0])
+                Translator.findAndModify({search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData[1])}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
+                    if(err) { return handleError(res, err); }
+                    parsedData[0][0][2] = ruParsedData[0][0][0];
+                    return res.json(200, parsedData);
+                });
+            else res.json(200, parsedData);
+        });
     });
 };
 
