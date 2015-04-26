@@ -42,7 +42,8 @@ angular.module 'gtranslateApp'
         $scope.translations = [{variant: 'Error occured'}]
         $scope.mainTranslation = ''
     .error (data, status, error, config) ->
-      console.log error
+      if typeof error != 'function'
+        console.log error
 
   if ($stateParams.search)
     $scope.translate $stateParams.search
