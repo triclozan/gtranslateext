@@ -113,18 +113,32 @@ function makeGoogleQuery(search, sl, tl, callback) {
 
 // Creates a new translator in the DB.
 exports.translate = function(req, res) {
-    makeGoogleQuery(req.query.search, 'hu', 'ru', function(err, ruParsedData) {
-        makeGoogleQuery(req.query.search, 'hu', 'en', function(err, parsedData) {
-            if (err) return handleError(res, err);
-            var translations = parsedData[1];
-            if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0])
-                Translator.findAndModify({search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
-                    if(err) { return handleError(res, err); }
-                    parsedData[0][0][2] = ruParsedData[0][0][0];
-                    return res.json(200, parsedData);
+    var found = false;
+    Translator.find({search: req.query.search}, function(err, translator) {
+        if(err) { return; }
+        console.log(translator);
+        try {
+            translator = JSON.parse(translator[0].result);
+            found = true;
+            return res.json(200, translator);
+        } catch (e) {
+
+        }
+        if (!found) {
+            makeGoogleQuery(req.query.search, 'hu', 'ru', function(err, ruParsedData) {
+                makeGoogleQuery(req.query.search, 'hu', 'en', function(err, parsedData) {
+                    if (err) return handleError(res, err);
+                    var translations = parsedData[1];
+                    if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0])
+                        Translator.findAndModify({search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
+                            if(err) { return handleError(res, err); }
+                            parsedData[0][0][2] = ruParsedData[0][0][0];
+                            return res.json(200, parsedData);
+                        });
+                    else res.json(200, parsedData);
                 });
-            else res.json(200, parsedData);
-        });
+            });
+        }
     });
 };
 
