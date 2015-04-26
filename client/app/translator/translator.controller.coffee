@@ -1,16 +1,20 @@
 'use strict'
 
 angular.module 'gtranslateApp'
-.controller 'TranslatorCtrl', ($scope, $http, $q) ->
+.controller 'TranslatorCtrl', ($scope, $stateParams, $http, $q) ->
   $scope.translation = 'Nothing to show here yet...'
-  $scope.translate = ->
-    canceler = $q.defer();
+  oldCanceler = null
+  $scope.translate = (searchParam) ->
     if (oldCanceler)
       oldCanceler.resolve()
-
+    canceler = $q.defer();
     oldCanceler = canceler
+
+    if (searchParam)
+      $scope.sentenceToTranslate = searchParam
+
     $http.get('/api/translator/translate', {
-      params: { search: $scope.sentenceToTranslate },
+      params: { search: searchParam || $scope.sentenceToTranslate },
       timeout: canceler.promise
     })
     .success (data, status, error, config) ->
@@ -26,6 +30,7 @@ angular.module 'gtranslateApp'
             category.variants.push {
               translation: item[0]
               synonyms: item[1]
+              frequency: if item.length == 4 then (if item[3] >= 0.05 then 2 else 1) else 0
             }
           )
           translations.push category
@@ -38,3 +43,6 @@ angular.module 'gtranslateApp'
         $scope.mainTranslation = ''
     .error (data, status, error, config) ->
       console.log error
+
+  if ($stateParams.search)
+    $scope.translate $stateParams.search

@@ -16,11 +16,13 @@ angular.module 'gtranslateApp'
     console.log search
     $http.get('/api/translator/' + search)
     .success (data, status, error, config) ->
-      console.log(data);
+      console.log data
+      $scope.mainTranslation = data[0].main;
+      $scope.ruTranslation = data[0].ru;
       translations = []
       try
         data = JSON.parse(data[0].result)
-        _.each(data, (item) ->
+        _.each(data[1], (item) ->
           category =
             name: item[0]
             variants: []
@@ -28,6 +30,7 @@ angular.module 'gtranslateApp'
             category.variants.push {
               translation: item[0]
               synonyms: item[1]
+              frequency: if item.length == 4 then (if item[3] >= 0.05 then 2 else 1) else 0
             }
           )
           translations.push category

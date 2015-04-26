@@ -7,7 +7,7 @@ angular.module 'gtranslateApp'
     link: '/'
   },{
     title: 'Translator'
-    link: '/translator'
+    link: '/translator/'
   },{
     title: 'Statistics'
     link: '/statistics'

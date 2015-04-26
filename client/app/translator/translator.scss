@@ -1,0 +1,55 @@
+.category {
+  color: rgb(119, 119, 119);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.translation {
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+  font-size: 13px;
+  height: 18px;
+  margin-bottom: 0px;
+  margin-left: 4px;
+  margin-right: 0px;
+  margin-top: 1px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  unicode-bidi: embed;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.translation:hover {
+  text-decoration: underline;
+}
+
+.synonyms {
+  border-collapse: separate;
+  color: rgb(119, 119, 119);
+  cursor: pointer;
+  display: inline;
+  font-size: 13px;
+  unicode-bidi: embed;
+  white-space: nowrap;
+}
+
+.synonym:hover {
+  text-decoration: underline;
+}
+
+td.frequency {
+  text-align: right;
+}
+
+td.frequency div {
+  background: #aaa;
+  display: inline-block;
+  height: 7px;
+  margin: 6px 2px 5px 0;
+  margin-left: 9px;
+}
+
+td.translation {
+  padding-left: 6px;
+}

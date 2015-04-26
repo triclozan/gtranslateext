@@ -15,12 +15,14 @@ div(ng-include='"components/navbar/navbar.html"')
     table(ng-repeat='category in translations')
         tbody
             tr
-                td.partOfSPeech(colspan='3')
+                td.category(colspan='3')
                     i {{category.name}}
             tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
                 td.frequency(style='width: 27px;')
-
+                    div(style='width: {{(variant.frequency + 1) * 8}}px;')
                 td.translation(style='padding-right:15px;')
-                    |{{variant.translation}}
+                    | {{variant.translation}}
                 td.synonyms
-                    span.synonym(ng-repeat='synonym in variant.synonyms') {{synonym}}{{$last ? '' : ', '}}
+                    span(ng-repeat='synonym in variant.synonyms')
+                        span.synonym(ui-sref='translator({search:synonym})') {{synonym}}
+                        | {{$last ? '' : ', '}}

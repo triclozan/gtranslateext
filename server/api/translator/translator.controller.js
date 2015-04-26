@@ -6,7 +6,7 @@ var Translator = require('./translator.model');
 
 // Get list of translations
 exports.index = function(req, res) {
-  Translator.find({}, function (err, translators) {
+  Translator.find({result: {'$ne': '' }}, 'search total', {sort: {'total': -1}}, function (err, translators) {
     if(err) { return handleError(res, err); }
     return res.json(200, translators);
   });
@@ -118,7 +118,7 @@ exports.translate = function(req, res) {
             if (err) return handleError(res, err);
             var translations = parsedData[1];
             if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0])
-                Translator.findAndModify({search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData[1])}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
+                Translator.findAndModify({search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
                     if(err) { return handleError(res, err); }
                     parsedData[0][0][2] = ruParsedData[0][0][0];
                     return res.json(200, parsedData);
