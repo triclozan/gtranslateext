@@ -8,5 +8,5 @@ module.exports = {
     uri: 'mongodb://localhost/gtranslate-dev'
   },
 
-  seedDB: true
+  seedDB: false
 };
