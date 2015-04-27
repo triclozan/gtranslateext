@@ -25,12 +25,14 @@ var socketio = require('socket.io')(server, {
   path: '/socket.io-client'
 });
 require('./config/socketio')(socketio);
-require('./config/express')(app);
-require('./routes')(app);
+require('./config/express')(app, function() {
+    require('./routes')(app);
 
-// Start server
-server.listen(config.port, config.ip, function () {
-  console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+    // Start server
+    server.listen(config.port, config.ip, function () {
+        console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+    });
+
 });
 
 // Expose app
