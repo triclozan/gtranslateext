@@ -3,10 +3,11 @@
 var _ = require('lodash');
 var https = require('https');
 var Translator = require('./translator.model');
+var async = require('async');
 
 // Get list of translations
 exports.index = function(req, res) {
-  Translator.find({result: {'$ne': '' }}, 'search total', {sort: {'total': -1}}, function (err, translators) {
+  Translator.find({hasResult: true}, 'search total', {sort: {'total': -1}}, function (err, translators) {
     if(err) { return handleError(res, err); }
     return res.json(200, translators);
   });
@@ -125,18 +126,50 @@ exports.translate = function(req, res) {
 
         }
         if (!found) {
-            makeGoogleQuery(req.query.search, 'hu', 'ru', function(err, ruParsedData) {
-                makeGoogleQuery(req.query.search, 'hu', 'en', function(err, parsedData) {
-                    if (err) return handleError(res, err);
-                    var translations = parsedData[1];
-                    if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0])
-                        Translator.findAndModify({search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function(err, translator) {
-                            if(err) { return handleError(res, err); }
-                            parsedData[0][0][2] = ruParsedData[0][0][0];
-                            return res.json(200, parsedData);
-                        });
-                    else res.json(200, parsedData);
-                });
+            async.parallel([
+                function(callback) {
+                    makeGoogleQuery(req.query.search, 'hu', 'ru', callback);
+                },
+                function(callback) {
+                    makeGoogleQuery(req.query.search, 'hu', 'en', callback);
+                },
+                function(callback) {
+                    makeGoogleQuery(req.query.search, 'en', 'ru', callback);
+                },
+                function(callback) {
+                    makeGoogleQuery(req.query.search, 'ru', 'en', callback);
+                }
+            ], function(err, results) {
+                if (err) return handleError(res, err);
+                var ruParsedData = results[0];
+                var parsedData = results[1];
+                var enParsedData = results[2];
+                var ruEnParsedData = results[3];
+                var translations = parsedData[1];
+                console.log(results);
+                var result;
+                if (!!(parsedData[1] && parsedData[1].length)) {
+                    result = parsedData;
+                }
+                if (!!(ruParsedData[1] && ruParsedData[1].length)) {
+                    result = ruParsedData;
+                }
+                if (!!(enParsedData[1] && enParsedData[1].length)) {
+                    result = enParsedData;
+                }
+                if (!!(ruEnParsedData[1] && ruEnParsedData[1].length)) {
+                    result = ruEnParsedData;
+                }
+                if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0]) {
+                    Translator.findAndModify({hasResult: !!(parsedData[1] && parsedData[1].length), search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function (err, translator) {
+                        if (err) {
+                            return handleError(res, err);
+                        }
+                        parsedData[0][0][2] = ruParsedData[0][0][0];
+                        return res.json(200, parsedData);
+                    });
+                }
+                else res.json(200, result);
             });
         }
     });

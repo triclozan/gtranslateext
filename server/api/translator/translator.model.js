@@ -8,6 +8,7 @@ var TranslatorSchema = new Schema({
   result: String,
   main: String,
   ru: String,
+  hasResult: Boolean,
   count: Number
 });
 
