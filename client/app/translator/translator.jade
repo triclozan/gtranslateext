@@ -20,7 +20,7 @@ div(ng-include='"components/navbar/navbar.html"')
             tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
                 td.frequency(style='width: 27px;')
                     div(style='width: {{(variant.frequency + 1) * 8}}px;')
-                td.translation(style='padding-right:15px;')
+                td.translation(style='padding-right:15px;', ui-sref='translator({search:variant.translation})')
                     | {{variant.translation}}
                 td.synonyms
                     span(ng-repeat='synonym in variant.synonyms')
