@@ -387,6 +387,7 @@ module.exports = function (grunt) {
           src: [
             'package.json',
             'content/**/*',
+            'config.ghost.js',
             'server/**/*'
           ]
         }]

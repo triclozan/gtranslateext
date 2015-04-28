@@ -6,33 +6,21 @@ config = {
     // When running Ghost in the wild, use the production environment
     // Configure your URL and mail settings here
     production: {
-        url: 'http://gtranslateext-triclozan.rhcloud.com/blog',
+        url: 'http://localhost:80/blog',
 
-        mail: {
-            transport: 'SMTP',
-            options: {
-                service: 'Mandrill',
-                auth: {
-                    user: 'user@example.com',
-                    pass: 'PaSsWoRd',
-                    from: 'Pantry <no-reply@pantryretail.com>'
-                }
-            }
-        },
-
+        mail: {},
         database: {
-            client: 'mysql',
+            client: 'sqlite3',
             connection: {
-                host: 'host.com',
-                user: 'user',
-                password: 'PaSsWoRd',
-                database: 'ghost',
-                charset  : 'utf8'
-            }
+                filename: path.join(__dirname, '/content/data/ghost.db')
+            },
+            debug: false
         },
 
         server: {
+            // Host to be passed to node's `net.Server#listen()`
             host: '127.0.0.1',
+            // Port to be passed to node's `net.Server#listen()`, for iisnode set this to `process.env.PORT`
             port: '2368'
         }
     },
