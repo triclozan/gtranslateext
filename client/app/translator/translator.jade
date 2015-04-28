@@ -1,28 +1,30 @@
 div(ng-include='"components/navbar/navbar.html"')
-.col-md-12
-    | This is the translator view.
-.col-md-6
-    textarea#inputText.form-control(
-        rows='5',
-        ng-change='translate()',
-        ng-model='sentenceToTranslate',
-        ng-model-options='{ debounce: 200 }'
-    )
-.col-md-6
-    | {{translations ? '' : 'Nothing to show here yet...'}}
-    div
-        b {{mainTranslation}} {{ruTranslation}}
-    table(ng-repeat='category in translations')
-        tbody
-            tr
-                td.category(colspan='3')
-                    i {{category.name}}
-            tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
-                td.frequency(style='width: 27px;')
-                    div(style='width: {{(variant.frequency + 1) * 8}}px;')
-                td.translation(style='padding-right:15px;', ui-sref='translator({search:variant.translation})')
-                    | {{variant.translation}}
-                td.synonyms
-                    span(ng-repeat='synonym in variant.synonyms')
-                        span.synonym(ui-sref='translator({search:synonym})') {{synonym}}
-                        | {{$last ? '' : ', '}}
+.container
+    .row
+        .col-md-12
+            | This is the translator view.
+        .col-md-6
+            textarea#inputText.form-control(
+                rows='5',
+                ng-change='translate()',
+                ng-model='sentenceToTranslate',
+                ng-model-options='{ debounce: 200 }'
+            )
+        .col-md-6
+            | {{translations ? '' : 'Nothing to show here yet...'}}
+            div
+                b {{mainTranslation}} {{ruTranslation}}
+            table(ng-repeat='category in translations')
+                tbody
+                    tr
+                        td.category(colspan='3')
+                            i {{category.name}}
+                    tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
+                        td.frequency(style='width: 27px;')
+                            div(style='width: {{(variant.frequency + 1) * 8}}px;')
+                        td.translation(style='padding-right:15px;', ui-sref='translator({search:variant.translation})')
+                            | {{variant.translation}}
+                        td.synonyms
+                            span(ng-repeat='synonym in variant.synonyms')
+                                span.synonym(ui-sref='translator({search:synonym})') {{synonym}}
+                                | {{$last ? '' : ', '}}
