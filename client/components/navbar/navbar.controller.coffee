@@ -11,6 +11,10 @@ angular.module 'gtranslateApp'
   },{
     title: 'Statistics'
     link: '/statistics'
+  },{
+    title: 'Blog'
+    link: '/blog',
+    target: '_self'
   }]
   $scope.isCollapsed = true
 
