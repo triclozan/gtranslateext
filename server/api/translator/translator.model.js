@@ -9,7 +9,7 @@ var TranslatorSchema = new Schema({
   main: String,
   ru: String,
   hasResult: Boolean,
-  count: Number
+  total: Number
 });
 
 TranslatorSchema.statics.findAndModify = function (query, sort, doc, options, callback) {

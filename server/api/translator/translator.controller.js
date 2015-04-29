@@ -114,18 +114,18 @@ function makeGoogleQuery(search, sl, tl, callback) {
 
 // Creates a new translator in the DB.
 exports.translate = function(req, res) {
-    var found = false;
-    Translator.find({search: req.query.search}, function(err, translator) {
-        if(err) { return; }
-        console.log(translator);
-        try {
-            translator = JSON.parse(translator[0].result);
-            found = true;
-            return res.json(200, translator);
-        } catch (e) {
-
-        }
-        if (!found) {
+    var entry = Translator.findOne({search: req.query.search}, function(err, translator) {
+        if(!err && translator) {
+            try {
+                var result = JSON.parse(translator.result);
+                res.json(200, result);
+                Translator.findByIdAndUpdate(translator._id, {$inc: {total: 1}}, function() {
+                });
+                return;
+            } catch (e) {
+                console.log(e);
+            }
+        } else {
             async.parallel([
                 function(callback) {
                     makeGoogleQuery(req.query.search, 'hu', 'ru', callback);
@@ -138,6 +138,12 @@ exports.translate = function(req, res) {
                 },
                 function(callback) {
                     makeGoogleQuery(req.query.search, 'ru', 'en', callback);
+                },
+                function(callback) {
+                    makeGoogleQuery(req.query.search, 'en', 'hu', callback);
+                },
+                function(callback) {
+                    makeGoogleQuery(req.query.search, 'ru', 'hu', callback);
                 }
             ], function(err, results) {
                 if (err) return handleError(res, err);
@@ -146,7 +152,6 @@ exports.translate = function(req, res) {
                 var enParsedData = results[2];
                 var ruEnParsedData = results[3];
                 var translations = parsedData[1];
-                console.log(results);
                 var result;
                 if (!!(parsedData[1] && parsedData[1].length)) {
                     result = parsedData;
@@ -161,12 +166,12 @@ exports.translate = function(req, res) {
                     result = ruEnParsedData;
                 }
                 if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0]) {
+                    parsedData[0][0][2] = ruParsedData[0][0][0];
+                    res.json(200, parsedData);
                     Translator.findAndModify({hasResult: !!(parsedData[1] && parsedData[1].length), search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function (err, translator) {
-                        if (err) {
+                        /*if (err) {
                             return handleError(res, err);
-                        }
-                        parsedData[0][0][2] = ruParsedData[0][0][0];
-                        return res.json(200, parsedData);
+                        }*/
                     });
                 }
                 else res.json(200, result);
