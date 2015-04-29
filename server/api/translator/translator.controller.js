@@ -4,6 +4,7 @@ var _ = require('lodash');
 var https = require('https');
 var Translator = require('./translator.model');
 var async = require('async');
+var XRegExp = require('xregexp').XRegExp;
 
 // Get list of translations
 exports.index = function(req, res) {
@@ -57,6 +58,7 @@ exports.destroy = function(req, res) {
 };
 
 function makeGoogleQuery(search, sl, tl, callback) {
+    console.log('QUERY!');
     var params = [
         ['q', search],
         ['client', 't'],
@@ -105,7 +107,10 @@ function makeGoogleQuery(search, sl, tl, callback) {
             data = data + chunk;
         }).on('end', function() {
             eval('parsedData = ' + data);
-            callback(null, parsedData);
+            callback(null, {
+                direction: sl + ' -> ' + tl,
+                data: parsedData
+            });
         })
     }).on('error', function(err) {
         return callback(err);
@@ -126,55 +131,74 @@ exports.translate = function(req, res) {
                 console.log(e);
             }
         } else {
-            async.parallel([
-                function(callback) {
-                    makeGoogleQuery(req.query.search, 'hu', 'ru', callback);
+            var isRu = false, isHu = false;
+            if (XRegExp('[а-яА-Я]').test(req.query.search)) {
+                isRu = true;
+            } else if (XRegExp('[öűüőí]|sz|zs').test(req.query.search)) {
+                isHu = true;
+            }
+            console.log(isRu, isHu);
+            var stub = function(callback) {
+                callback();
+            }
+            var languages = [
+                {
+                    src: 'hu',
+                    dest: 'ru',
+                    criterion: isRu
                 },
-                function(callback) {
-                    makeGoogleQuery(req.query.search, 'hu', 'en', callback);
+                {
+                    src: 'hu',
+                    dest: 'en',
+                    criterion: isRu
                 },
-                function(callback) {
-                    makeGoogleQuery(req.query.search, 'en', 'ru', callback);
+                {
+                    src: 'en',
+                    dest: 'ru',
+                    criterion: isRu || isHu
                 },
-                function(callback) {
-                    makeGoogleQuery(req.query.search, 'ru', 'en', callback);
+                {
+                    src: 'ru',
+                    dest: 'en',
+                    criterion: !isRu
                 },
-                function(callback) {
-                    makeGoogleQuery(req.query.search, 'en', 'hu', callback);
+                {
+                    src: 'en',
+                    dest: 'hu',
+                    criterion: isRu || isHu
                 },
-                function(callback) {
-                    makeGoogleQuery(req.query.search, 'ru', 'hu', callback);
+                {
+                    src: 'ru',
+                    dest: 'hu',
+                    criterion: !isRu
                 }
-            ], function(err, results) {
+            ];
+            var startTime = (new Date()).getTime();
+            async.parallel(
+                languages.map(function(item) {
+                    return item.criterion ? stub : function(callback) {
+                        makeGoogleQuery(req.query.search, item.src, item.dest, callback);
+                    };
+                })
+            , function(err, results) {
+                console.log(((new Date()).getTime() - startTime));
                 if (err) return handleError(res, err);
-                var ruParsedData = results[0];
-                var parsedData = results[1];
-                var enParsedData = results[2];
-                var ruEnParsedData = results[3];
-                var translations = parsedData[1];
-                var result;
-                if (!!(parsedData[1] && parsedData[1].length)) {
-                    result = parsedData;
+                var needsCaching;
+                if (results[1] && results[1].data && results[1].data[0] && results[1].data[0][0] && results[1].data[0][0][0]  && results[1].data[0][0][0] != results[1].data[0][0][1]) {
+                    needsCaching = true;
                 }
-                if (!!(ruParsedData[1] && ruParsedData[1].length)) {
-                    result = ruParsedData;
-                }
-                if (!!(enParsedData[1] && enParsedData[1].length)) {
-                    result = enParsedData;
-                }
-                if (!!(ruEnParsedData[1] && ruEnParsedData[1].length)) {
-                    result = ruEnParsedData;
-                }
-                if (parsedData[0] && parsedData[0][0] && parsedData[0][0][0] != parsedData[0][0][1] && ruParsedData[0] && ruParsedData[0][0]) {
-                    parsedData[0][0][2] = ruParsedData[0][0][0];
-                    res.json(200, parsedData);
-                    Translator.findAndModify({hasResult: !!(parsedData[1] && parsedData[1].length), search: req.query.search, ru: ruParsedData[0][0][0], main: parsedData[0][0][0], result: JSON.stringify(parsedData)}, [], { $inc: { total: 1 } }, {upsert: true}, function (err, translator) {
+                if (needsCaching) {
+                    res.json(200, results);
+                    Translator.findAndModify({hasResult: true, search: req.query.search, result: JSON.stringify(results)}, [], { $inc: { total: 1 } }, {upsert: true}, function (err, translator) {
                         /*if (err) {
                             return handleError(res, err);
                         }*/
                     });
                 }
-                else res.json(200, result);
+                else {
+                    console.log(((new Date()).getTime() - startTime));
+                    res.json(200, results);
+                }
             });
         }
     });

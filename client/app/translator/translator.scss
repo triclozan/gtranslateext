@@ -27,15 +27,15 @@
 .synonyms {
   border-collapse: separate;
   color: rgb(119, 119, 119);
-  cursor: pointer;
   display: inline;
   font-size: 13px;
   unicode-bidi: embed;
   white-space: nowrap;
 }
 
-.synonym:hover {
+.synonym:hover, .mainTranslation:hover {
   text-decoration: underline;
+  cursor: pointer;
 }
 
 td.frequency {

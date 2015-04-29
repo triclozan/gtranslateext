@@ -19,28 +19,38 @@ angular.module 'gtranslateApp'
     })
     .success (data, status, error, config) ->
       console.log data
-      translations = []
+      $scope.languages = []
       try
         #data = JSON.parse(data)
-        _.each(data[1], (item) ->
-          category =
-            name: item[0]
-            variants: []
-          _.each(item[2], (item) ->
-            category.variants.push {
-              translation: item[0]
-              synonyms: item[1]
-              frequency: if item.length == 4 then (if item[3] >= 0.05 then 2 else 1) else 0
-            }
-          )
-          translations.push category
+        _.each(data, (item) ->
+          if (item && item.data)
+            language =
+              direction: item.direction
+              translations: []
+              self: item.data[0][0][1]
+              mainTranslation: item.data[0][0][0]
+            console.log 'Categories'
+            if (item.data[1])
+              _.each(item.data[1], (item) ->
+                category =
+                  name: item[0]
+                  variants: []
+                _.each(item[2], (item) ->
+                  category.variants.push {
+                    translation: item[0]
+                    synonyms: item[1]
+                    frequency: if item.length == 4 then (if item[3] >= 0.05 then 2 else 1) else 0
+                  }
+                )
+                language.translations.push category
+              )
+            console.log 'Pushed!'
+            $scope.languages.push language
         )
-        $scope.translations = translations
-        $scope.mainTranslation = data[0][0][0]
-        $scope.ruTranslation = data[0][0][2]
       catch e
-        $scope.translations = [{variant: 'Error occured'}]
-        $scope.mainTranslation = ''
+        console.log e
+        #$scope.translations = [{variant: 'Error occured'}]
+        #$scope.mainTranslation = ''
     .error (data, status, error, config) ->
       if typeof error != 'function'
         console.log error
