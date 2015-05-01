@@ -3,6 +3,7 @@ div(ng-include='"components/navbar/navbar.html"')
     .row
         .col-md-12
             | This is the translator view.
+    .row
         .col-md-6
             textarea#inputText.form-control(
                 rows='5',
@@ -10,25 +11,47 @@ div(ng-include='"components/navbar/navbar.html"')
                 ng-model='sentenceToTranslate',
                 ng-model-options='{ debounce: 200 }'
             )
-        .col-md-6
-            | {{languages ? '' : 'Nothing to show here yet...'}}
+
             div(ng-repeat='language in languages')
-                div {{language.direction}}
-                div
-                    b {{language.self}}
-                    | ->
-                    b.mainTranslation(ui-sref='translator({search:language.mainTranslation})') {{language.mainTranslation}}
-                table(ng-repeat='category in language.translations')
-                    tbody
-                        tr
-                            td.category(colspan='3')
-                                i {{category.name}}
-                        tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
-                            td.frequency(style='width: 27px;')
-                                div(style='width: {{(variant.frequency + 1) * 8}}px;')
-                            td.translation(style='padding-right:15px;', ui-sref='translator({search:variant.translation})')
-                                | {{variant.translation}}
-                            td.synonyms
-                                span(ng-repeat='synonym in variant.synonyms')
-                                    span.synonym(ui-sref='translator({search:synonym})') {{synonym}}
-                                    | {{$last ? '' : ', '}}
+                div(ng-if='directionTest("hu$", language.direction)')
+                    div {{language.direction}}
+                    div
+                        b {{language.self}}
+                        | ->
+                        b.mainTranslation(ui-sref='translator({search:language.mainTranslation})') {{language.mainTranslation}}
+                    table(ng-repeat='category in language.translations')
+                        tbody
+                            tr
+                                td.category(colspan='3')
+                                    i {{category.name}}
+                            tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
+                                td.frequency(style='width: 27px;')
+                                    div(style='width: {{(variant.frequency + 1) * 8}}px;')
+                                td.translation(style='padding-right:15px;', ui-sref='translator({search:variant.translation})')
+                                    | {{variant.translation}}
+                                td.synonyms
+                                    span(ng-repeat='synonym in variant.synonyms')
+                                        span.synonym(ui-sref='translator({search:synonym})') {{synonym}}
+                                        | {{$last ? '' : ', '}}
+        .col-md-6
+            div(ng-repeat='language in languages')
+                div(ng-if='directionTest("ru|en$", language.direction)')
+                    div {{language.direction}}
+                    div
+                        b {{language.self}}
+                        | ->
+                        b.mainTranslation(ui-sref='translator({search:language.mainTranslation})') {{language.mainTranslation}}
+                    table(ng-repeat='category in language.translations')
+                        tbody
+                            tr
+                                td.category(colspan='3')
+                                    i {{category.name}}
+                            tr(ng-repeat='variant in category.variants', style='padding-left: 20px;')
+                                td.frequency(style='width: 27px;')
+                                    div(style='width: {{(variant.frequency + 1) * 8}}px;')
+                                td.translation(style='padding-right:15px;', ui-sref='translator({search:variant.translation})')
+                                    | {{variant.translation}}
+                                td.synonyms
+                                    span(ng-repeat='synonym in variant.synonyms')
+                                        span.synonym(ui-sref='translator({search:synonym})') {{synonym}}
+                                        | {{$last ? '' : ', '}}

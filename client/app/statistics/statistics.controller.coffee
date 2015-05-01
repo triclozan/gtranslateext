@@ -12,6 +12,9 @@ angular.module 'gtranslateApp'
     .error (data, status, error, config) ->
       console.log error
 
+  $scope.directionTest = (regexp, search) ->
+    return (new RegExp(regexp)).test(search)
+
   $scope.showDetails = (search) ->
     console.log search
     $http.get('/api/translator/' + search)

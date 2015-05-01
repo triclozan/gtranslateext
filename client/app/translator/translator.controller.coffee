@@ -4,6 +4,10 @@ angular.module 'gtranslateApp'
 .controller 'TranslatorCtrl', ($scope, $stateParams, $http, $q) ->
   $scope.translation = 'Nothing to show here yet...'
   oldCanceler = null
+
+  $scope.directionTest = (regexp, search) ->
+    return (new RegExp(regexp)).test(search)
+
   $scope.translate = (searchParam) ->
     if (oldCanceler)
       oldCanceler.resolve()

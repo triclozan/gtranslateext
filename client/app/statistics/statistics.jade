@@ -6,7 +6,7 @@ div(ng-include='"components/navbar/navbar.html"')
         .col-md-6
             div.stat(ng-repeat='stat in stats')
                 a(ng-click='showDetails(stat.search)', href='#') {{stat.search}} {{stat.total}}
-        .col-md-6
+        .col-md-6.fixed-info
             | {{languages ? '' : 'Nothing to show here yet...'}}
             div(ng-repeat='language in languages')
                 div {{language.direction}}
