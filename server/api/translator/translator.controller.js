@@ -211,7 +211,10 @@ exports.translate = function(req, res) {
                                 }
                             });
                             cachedQuery = results[1].data[1][0][2][0][1][maxIndex];
-                            results[1].data[0][0][1] = cachedQuery;
+                            _.each(results, function(item) {
+                                if (item && item.data && item.data[0] && item.data[0][0] && item.data[0][0][1])
+                                    item.data[0][0][1] = cachedQuery;
+                            });
                         }
                     } catch (e) {
                         console.log(e);
