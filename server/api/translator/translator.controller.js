@@ -5,6 +5,7 @@ var https = require('https');
 var Translator = require('./translator.model');
 var async = require('async');
 var XRegExp = require('xregexp').XRegExp;
+var natural = require('natural');
 
 // Get list of translations
 exports.index = function(req, res) {
@@ -196,8 +197,27 @@ exports.translate = function(req, res) {
                     needsCaching = true;
                 }
                 if (needsCaching) {
+                    var cachedQuery = results[1].data[0][0][1];
+                    var hasResult = !!results[1].data[1];
+                    try {
+                        if (hasResult) {
+                            var maxDistance = 0,
+                                maxIndex;
+                            _.each(results[1].data[1][0][2][0][1], function(item, i) {
+                                var distance = natural.JaroWinklerDistance(req.query.search,item);
+                                if (distance > maxDistance) {
+                                    maxDistance = distance;
+                                    maxIndex = i;
+                                }
+                            });
+                            cachedQuery = results[1].data[1][0][2][0][1][maxIndex];
+                            results[1].data[0][0][1] = cachedQuery;
+                        }
+                    } catch (e) {
+                        console.log(e);
+                    }
                     res.json(200, results);
-                    Translator.findAndModify({hasResult: true, search: req.query.search, result: JSON.stringify(results)}, [], { $inc: { total: 1 } }, {upsert: true}, function (err, translator) {
+                    Translator.findAndModify({hasResult: hasResult, search: cachedQuery}, [], { $inc: { total: 1 }, $set: {result: JSON.stringify(results)}}, {upsert: true}, function (err, translator) {
                         /*if (err) {
                             return handleError(res, err);
                         }*/
