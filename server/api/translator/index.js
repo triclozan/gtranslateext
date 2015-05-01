@@ -6,6 +6,7 @@ var controller = require('./translator.controller');
 var router = express.Router();
 
 router.get('/translate', controller.translate);
+router.get('/clearData', controller.clearData);
 
 router.get('/', controller.index);
 router.get('/:id', controller.show);

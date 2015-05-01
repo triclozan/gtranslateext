@@ -14,6 +14,14 @@ exports.index = function(req, res) {
   });
 };
 
+// clear all data
+exports.clearData = function(req, res) {
+    Translator.find({}, null, null, function (err, translators) {
+        if(err) { return handleError(res, err); }
+        return res.send(204);
+    }).remove().exec();
+};
+
 // Get translation details
 exports.show = function(req, res) {
   Translator.find({search: req.params.id}, function (err, translator) {
